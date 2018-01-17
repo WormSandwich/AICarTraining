@@ -654,7 +654,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1946636114676210}
   m_LocalRotation: {x: 0.2726589, y: -0.3620406, z: 0.11161908, w: 0.88437825}
-  m_LocalPosition: {x: 1.815, y: 1.548, z: -1.635}
+  m_LocalPosition: {x: 2.3, y: 2.02, z: -2.13}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4095331622621322}
@@ -1543,7 +1543,7 @@ MonoBehaviour:
   - {fileID: 4385092970222608}
   - {fileID: 4955488356276096}
   maxTorque: 200
-  brakeTorque: 200
+  brakeTorque: 250
   steerForce: 2
   maxSensorDistance: 5
   sensorMeshes:

@@ -20,6 +20,20 @@ public class CarManager {
         carController = instance.GetComponent<CarController>();
 	}
 	
+    public bool HasFailed()
+    {
+        float[] sensorData = carController.PollSensors();
+        for(int i=0; i<sensorData.Length; i++)
+        {
+            Debug.Log("Sensor [" + i + "] = " + sensorData[i]);
+            if(sensorData[i] < 3 && sensorData[i]>0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
 	public void Reset()
     {
         instance.transform.position = spawnPoint.position;

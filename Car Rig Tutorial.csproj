@@ -222,6 +222,7 @@
     <Compile Include="Assets\Scripts\CarController.cs" />
     <Compile Include="Assets\Scripts\CarManager.cs" />
     <Compile Include="Assets\Scripts\GameManager.cs" />
+    <Compile Include="Assets\Scripts\UDPConnectionWrapper.cs" />
     <Compile Include="Assets\Wireframe\Examples\Scripts\AutoRotate.cs" />
     <Compile Include="Assets\Wireframe\ImageEffect\WireframeImageEffect.cs" />
   </ItemGroup>
