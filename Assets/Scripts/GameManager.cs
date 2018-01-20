@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using ZMQ;
 
 /*
  * Configured for single car training. Can be easily changed for multiple cars.
@@ -16,12 +17,21 @@ public class GameManager : MonoBehaviour {
 
     private double trialNumber;
     private double totalTrials;
+
+    //ZMQ
+    private Context ctx;
+    private Socket socket;
+
 	// Use this for initialization
 	void Start () {
         trialNumber = 0;
         totalTrials = 10;
         messageText.text = "Trial No: " + trialNumber;
         SpawnCar();
+
+        //ZMQ
+        socket = ctx.Socket(SocketType.PUB);
+
         StartCoroutine(GameLoop());
 	}
 	
@@ -47,6 +57,9 @@ public class GameManager : MonoBehaviour {
             StartCoroutine(GameLoop());
         }
 
+        //ZMQ Cleanup
+        socket.Dispose();
+        ctx.Dispose();
     }
 
     private IEnumerator TrialStart()
@@ -55,7 +68,7 @@ public class GameManager : MonoBehaviour {
         trialNumber++;
 
         messageText.text = "Trial No: " + trialNumber;
-
+ 
         yield return null;
     }
 
