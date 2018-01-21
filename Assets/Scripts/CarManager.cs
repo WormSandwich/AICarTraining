@@ -25,13 +25,39 @@ public class CarManager {
         float[] sensorData = carController.PollSensors();
         for(int i=0; i<sensorData.Length; i++)
         {
-            Debug.Log("Sensor [" + i + "] = " + sensorData[i]);
+            //Debug.Log("Sensor [" + i + "] = " + sensorData[i]);
             if(sensorData[i] < 3 && sensorData[i]>0)
             {
                 return true;
             }
         }
         return false;
+    }
+
+    public void MoveForward()
+    {
+        carController.acc = 1f;
+    }
+
+    public void MoveBackward()
+    {
+        carController.acc = -1f;
+    }
+
+    public void TurnRight()
+    {
+        carController.steer = 1f;
+    }
+
+    public void TurnLeft()
+    {
+        carController.steer = -1f;
+    }
+
+    public void Stop()
+    {
+        carController.acc = 0f;
+        carController.steer = 0f;
     }
 
 	public void Reset()

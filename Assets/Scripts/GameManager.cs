@@ -1,8 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
-using ZMQ;
 
 /*
  * Configured for single car training. Can be easily changed for multiple cars.
@@ -18,9 +18,9 @@ public class GameManager : MonoBehaviour {
     private double trialNumber;
     private double totalTrials;
 
-    //ZMQ
-    private Context ctx;
-    private Socket socket;
+    static TCPManager tcpManager;
+    private string dataToSend;
+    private string dataReceived;
 
 	// Use this for initialization
 	void Start () {
@@ -29,12 +29,12 @@ public class GameManager : MonoBehaviour {
         messageText.text = "Trial No: " + trialNumber;
         SpawnCar();
 
-        //ZMQ
-        socket = ctx.Socket(SocketType.PUB);
+        tcpManager = new TCPManager("127.0.0.1", 10000);
 
+        dataToSend = "FWD";
         StartCoroutine(GameLoop());
 	}
-	
+
 	// Update is called once per frame
 	void Update () {
 		
@@ -56,10 +56,6 @@ public class GameManager : MonoBehaviour {
         {
             StartCoroutine(GameLoop());
         }
-
-        //ZMQ Cleanup
-        socket.Dispose();
-        ctx.Dispose();
     }
 
     private IEnumerator TrialStart()
@@ -76,6 +72,27 @@ public class GameManager : MonoBehaviour {
     {
         while (!carManager.HasFailed())
         {
+            tcpManager.SendReq(dataToSend,out dataReceived);
+            if(dataReceived == "FD")
+            {
+                carManager.MoveForward();
+            }
+            else if(dataReceived == "BK")
+            {
+                carManager.MoveBackward();
+            }
+            else if (dataReceived == "RT")
+            {
+                carManager.TurnRight();
+            }
+            else if (dataReceived == "LT")
+            {
+                carManager.TurnLeft();
+            }
+            else
+            {
+                carManager.Stop();
+            }
             yield return null;
         }
     }

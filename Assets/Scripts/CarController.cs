@@ -26,7 +26,10 @@ public class CarController : MonoBehaviour {
     private float m_brakeTorque = 0f;
     private long hitCount = 0;
     private float[] sensorOutput = new float[noOfSensors];
-	// Use this for initialization
+    // Use this for initialization
+    [HideInInspector] public float steer = 0f;
+    [HideInInspector] public float acc = 0f;
+
 	void Start ()
     {
         m_rigidBody = GetComponent<Rigidbody>();
@@ -139,8 +142,10 @@ public class CarController : MonoBehaviour {
 
     private void FixedUpdate()
     {
+        /*
         float steer = Input.GetAxis("Horizontal");
         float acc = Input.GetAxis("Vertical");
+        */
 
         if (steer == 0f && acc == 0f)
         {
