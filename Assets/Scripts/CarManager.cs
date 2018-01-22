@@ -12,12 +12,17 @@ public class CarManager {
 
     public Transform spawnPoint;
     [HideInInspector] public GameObject instance;
-
     private CarController carController;
+    private Camera frontCamera;
 
 	// Use this for initialization
 	public void Setup () {
         carController = instance.GetComponent<CarController>();
+        frontCamera = instance.GetComponentInChildren<Camera>();
+        if(frontCamera == null)
+        {
+            Debug.Log("Not fetched cam");
+        }
 	}
 	
     public bool HasFailed()
@@ -32,6 +37,21 @@ public class CarManager {
             }
         }
         return false;
+    }
+
+    public byte[] GetImage(int w, int h)
+    {
+        RenderTexture rt = new RenderTexture(w, h, 24);
+        frontCamera.targetTexture = rt;
+        Texture2D image = new Texture2D(w, h, TextureFormat.RGB24, false);
+        frontCamera.Render();
+        RenderTexture.active = rt;
+        image.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+
+        frontCamera.targetTexture = null;
+        RenderTexture.active = null;
+        rt.DiscardContents();
+        return image.EncodeToPNG();
     }
 
     public void MoveForward()

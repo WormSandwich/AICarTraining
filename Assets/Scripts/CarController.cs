@@ -7,6 +7,7 @@ public class CarController : MonoBehaviour {
     const int noOfSensors = 4;
 
     [Header("Car Physics Settings")]
+    public bool isManual = false;
     public Transform centreOfMass;
     public WheelCollider[] wheelColliders = new WheelCollider[4];
     public Transform[] tireMeshes = new Transform[4];
@@ -142,10 +143,11 @@ public class CarController : MonoBehaviour {
 
     private void FixedUpdate()
     {
-        /*
-        float steer = Input.GetAxis("Horizontal");
-        float acc = Input.GetAxis("Vertical");
-        */
+        if (isManual)
+        {
+            steer = Input.GetAxis("Horizontal");
+            acc = Input.GetAxis("Vertical");
+        }
 
         if (steer == 0f && acc == 0f)
         {

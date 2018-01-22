@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
-
+using TestCode;
 /*
  * Configured for single car training. Can be easily changed for multiple cars.
  */
@@ -19,8 +19,10 @@ public class GameManager : MonoBehaviour {
     private double totalTrials;
 
     static TCPManager tcpManager;
-    private string dataToSend;
+    private GameState gameState;
     private string dataReceived;
+
+    private bool tempFlag = true;
 
 	// Use this for initialization
 	void Start () {
@@ -31,7 +33,6 @@ public class GameManager : MonoBehaviour {
 
         tcpManager = new TCPManager("127.0.0.1", 10000);
 
-        dataToSend = "FWD";
         StartCoroutine(GameLoop());
 	}
 
@@ -56,12 +57,21 @@ public class GameManager : MonoBehaviour {
         {
             StartCoroutine(GameLoop());
         }
+
+        //tcpManager.Dispose();
     }
 
     private IEnumerator TrialStart()
     {
         ResetCar();
         trialNumber++;
+        if(tempFlag)
+        {
+            string fileName = Application.dataPath + "/screenshots/shot.png";
+            System.IO.File.WriteAllBytes(fileName, carManager.GetImage(512,512));
+            Debug.Log(string.Format("Took screenshot to: {0}", fileName));
+            tempFlag = false;
+        }
 
         messageText.text = "Trial No: " + trialNumber;
  
@@ -72,7 +82,23 @@ public class GameManager : MonoBehaviour {
     {
         while (!carManager.HasFailed())
         {
-            tcpManager.SendReq(dataToSend,out dataReceived);
+
+            gameState = new GameState
+            {
+                Sensor0 = 1.2f,
+                Sensor1 = 1.2f,
+                Sensor2 = 1.2f,
+                Sensor4 = 1.2f,
+                VelX = 1.2f,
+                VelY = 1.2f,
+                VelZ = 1.2f,
+                RotX = 1.2f,
+                RotY = 1.2f,
+                RotZ = 1.2f,
+                Image = Google.Protobuf.ByteString.Empty
+            };
+
+            tcpManager.SendReq(gameState,out dataReceived);
             if(dataReceived == "FD")
             {
                 carManager.MoveForward();
