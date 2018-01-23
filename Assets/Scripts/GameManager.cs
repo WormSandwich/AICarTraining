@@ -22,17 +22,23 @@ public class GameManager : MonoBehaviour {
     private GameState gameState;
     private string dataReceived;
 
-    private bool tempFlag = true;
+    Thread thread;
+    static readonly object lockObject = new object();
+    string returnData = "";
+    bool processData = false;
+    Google.Protobuf.ByteString image;
 
-	// Use this for initialization
+    // Use this for initialization
 	void Start () {
         trialNumber = 0;
         totalTrials = 10;
         messageText.text = "Trial No: " + trialNumber;
+        image = Google.Protobuf.ByteString.Empty;
+
         SpawnCar();
 
-        tcpManager = new TCPManager("127.0.0.1", 10000);
-
+        thread = new Thread(new ThreadStart(ThreadMethod));
+        thread.Start();
         StartCoroutine(GameLoop());
 	}
 
@@ -40,6 +46,37 @@ public class GameManager : MonoBehaviour {
 	void Update () {
 		
 	}
+
+    private void ThreadMethod()
+    {
+        tcpManager = new TCPManager("127.0.0.1", 10000);
+        string recieved = "";
+        while (true)
+        {
+           lock (lockObject)
+            {
+                gameState = new GameState
+                {
+                    Sensor0 = 1.2f,
+                    Sensor1 = 1.2f,
+                    Sensor2 = 1.2f,
+                    Sensor4 = 1.2f,
+                    VelX = 1.2f,
+                    VelY = 1.2f,
+                    VelZ = 1.2f,
+                    RotX = 1.2f,
+                    RotY = 1.2f,
+                    RotZ = 1.2f,
+                    Image = image
+                };
+            }
+            tcpManager.SendReq(gameState, out recieved);
+            lock (lockObject) { 
+                dataReceived = recieved;
+                processData = true;
+            }
+        }
+    }
 
     void SpawnCar()
     {
@@ -65,6 +102,7 @@ public class GameManager : MonoBehaviour {
     {
         ResetCar();
         trialNumber++;
+        /*
         if(tempFlag)
         {
             string fileName = Application.dataPath + "/screenshots/shot.png";
@@ -72,7 +110,7 @@ public class GameManager : MonoBehaviour {
             Debug.Log(string.Format("Took screenshot to: {0}", fileName));
             tempFlag = false;
         }
-
+        */
         messageText.text = "Trial No: " + trialNumber;
  
         yield return null;
@@ -82,42 +120,34 @@ public class GameManager : MonoBehaviour {
     {
         while (!carManager.HasFailed())
         {
-
-            gameState = new GameState
+            if (processData)
             {
-                Sensor0 = 1.2f,
-                Sensor1 = 1.2f,
-                Sensor2 = 1.2f,
-                Sensor4 = 1.2f,
-                VelX = 1.2f,
-                VelY = 1.2f,
-                VelZ = 1.2f,
-                RotX = 1.2f,
-                RotY = 1.2f,
-                RotZ = 1.2f,
-                Image = Google.Protobuf.ByteString.Empty
-            };
-
-            tcpManager.SendReq(gameState,out dataReceived);
-            if(dataReceived == "FD")
-            {
-                carManager.MoveForward();
-            }
-            else if(dataReceived == "BK")
-            {
-                carManager.MoveBackward();
-            }
-            else if (dataReceived == "RT")
-            {
-                carManager.TurnRight();
-            }
-            else if (dataReceived == "LT")
-            {
-                carManager.TurnLeft();
-            }
-            else
-            {
-                carManager.Stop();
+                lock (lockObject)
+                {
+                    if (dataReceived == "FD")
+                    {
+                        carManager.MoveForward();
+                    }
+                    else if (dataReceived == "BK")
+                    {
+                        carManager.MoveBackward();
+                    }
+                    else if (dataReceived == "RT")
+                    {
+                        carManager.TurnRight();
+                    }
+                    else if (dataReceived == "LT")
+                    {
+                        carManager.TurnLeft();
+                    }
+                    else
+                    {
+                        carManager.Stop();
+                    }
+                    processData = false;
+                    image = Google.Protobuf.ByteString.CopyFrom(carManager.GetImage(256, 256));
+                    Debug.Log("Size: " + gameState.CalculateSize());
+                }
             }
             yield return null;
         }
