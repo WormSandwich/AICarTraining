@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CarController : MonoBehaviour {
 
-    const int noOfSensors = 4;
+    [HideInInspector]public const int noOfSensors = 4;
 
     [Header("Car Physics Settings")]
     public bool isManual = false;
@@ -27,6 +27,12 @@ public class CarController : MonoBehaviour {
     private float m_brakeTorque = 0f;
     private long hitCount = 0;
     private float[] sensorOutput = new float[noOfSensors];
+
+    private Vector3 acceleration = new Vector3(0f, 0f, 0f);
+    private Vector3 angularAcceleration = new Vector3(0f, 0f, 0f);
+    private Vector3 prev_velocity = new Vector3(0f,0f,0f);
+    private Vector3 prev_angularVelocity = new Vector3(0f, 0f, 0f);
+
     // Use this for initialization
     [HideInInspector] public float steer = 0f;
     [HideInInspector] public float acc = 0f;
@@ -58,6 +64,7 @@ public class CarController : MonoBehaviour {
         }
     }
 
+    //called every 0.1seconds?
     private void Sensor()
     {
         for (int i = 0; i < noOfSensors; i++)
@@ -83,6 +90,14 @@ public class CarController : MonoBehaviour {
                 sensorLines[i].endColor = Color.red;
             }
         }
+
+        acceleration = (m_rigidBody.velocity - prev_velocity) / 0.1f;
+        prev_velocity = m_rigidBody.velocity;
+
+
+        angularAcceleration = (m_rigidBody.angularVelocity - prev_angularVelocity) / 0.1f;
+        prev_angularVelocity = m_rigidBody.angularVelocity;
+        
     }
 
     public float[] PollSensors()
@@ -94,6 +109,17 @@ public class CarController : MonoBehaviour {
         }
         return values;
     }
+
+    public Vector3 PollAcc()
+    {
+        return acceleration;
+    }
+
+    public Vector3 PollGyro()
+    {
+        return angularAcceleration;
+    }
+
 
     public void MoveForward()
     {

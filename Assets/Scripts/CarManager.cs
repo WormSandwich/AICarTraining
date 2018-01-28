@@ -15,6 +15,7 @@ public class CarManager {
     private CarController carController;
     private Camera frontCamera;
 
+
 	// Use this for initialization
 	public void Setup () {
         carController = instance.GetComponent<CarController>();
@@ -37,6 +38,27 @@ public class CarManager {
             }
         }
         return false;
+    }
+
+    public float[] PollSensors()
+    {
+        float[] SensorData = carController.PollSensors();
+        Vector3 acc = carController.PollAcc();
+        Vector3 angularAcc = carController.PollGyro();
+        float[] returnSensorData = new float[]
+        {
+            SensorData[0],
+            SensorData[1],
+            SensorData[2],
+            SensorData[3],
+            acc.x,
+            acc.y,
+            acc.z,
+            angularAcc.x,
+            angularAcc.y,
+            angularAcc.z
+        };
+        return returnSensorData;
     }
 
     public byte[] GetImage(int w, int h)

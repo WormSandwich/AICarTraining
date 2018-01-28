@@ -14,19 +14,17 @@ public class GameManager : MonoBehaviour {
     public CarManager carManager;
 
     public Text messageText;
-
     private double trialNumber;
     private double totalTrials;
 
-    static TCPManager tcpManager;
-    private GameState gameState;
+    static ZSocketManager zSocketManager;
     private string dataReceived;
 
     Thread thread;
     static readonly object lockObject = new object();
-    string returnData = "";
     bool processData = false;
     Google.Protobuf.ByteString image;
+    float[] sensorData = new float[10] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f};
 
     // Use this for initialization
 	void Start () {
@@ -49,28 +47,27 @@ public class GameManager : MonoBehaviour {
 
     private void ThreadMethod()
     {
-        tcpManager = new TCPManager("127.0.0.1", 10000);
+        zSocketManager = new ZSocketManager("tcp://127.0.0.1:10000");
         string recieved = "";
         while (true)
         {
-           lock (lockObject)
+            GameState gameState = new GameState();
+            lock (lockObject)
             {
-                gameState = new GameState
-                {
-                    Sensor0 = 1.2f,
-                    Sensor1 = 1.2f,
-                    Sensor2 = 1.2f,
-                    Sensor4 = 1.2f,
-                    VelX = 1.2f,
-                    VelY = 1.2f,
-                    VelZ = 1.2f,
-                    RotX = 1.2f,
-                    RotY = 1.2f,
-                    RotZ = 1.2f,
-                    Image = image
-                };
+                gameState.Sensor0 = sensorData[0];
+                gameState.Sensor1 = sensorData[1];
+                gameState.Sensor2 = sensorData[2];
+                gameState.Sensor3 = sensorData[3];
+                gameState.VelX = sensorData[4];
+                gameState.VelY = sensorData[5];
+                gameState.VelZ = sensorData[6];
+                gameState.RotX = sensorData[7];
+                gameState.RotY = sensorData[8];
+                gameState.RotZ = sensorData[9];
+                gameState.Image = image;
+                
             }
-            tcpManager.SendReq(gameState, out recieved);
+            zSocketManager.SendReq(gameState, out recieved);
             lock (lockObject) { 
                 dataReceived = recieved;
                 processData = true;
@@ -146,7 +143,16 @@ public class GameManager : MonoBehaviour {
                     }
                     processData = false;
                     image = Google.Protobuf.ByteString.CopyFrom(carManager.GetImage(256, 256));
-                    Debug.Log("Size: " + gameState.CalculateSize());
+                    sensorData = carManager.PollSensors();
+                    
+                    /*
+                    Debug.Log("data: ");
+                    for(int i=0; i<10; i++)
+                    {
+                        Debug.Log("Sensor " + i + " : " + sensorData[i]);
+                    }
+                    */
+                    
                 }
             }
             yield return null;
@@ -157,4 +163,10 @@ public class GameManager : MonoBehaviour {
     {
         carManager.Reset();
     }
+
+    void OnApplicationQuit()
+    {
+       
+    }
+
 }

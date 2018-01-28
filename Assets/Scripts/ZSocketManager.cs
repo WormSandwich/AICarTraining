@@ -1,33 +1,45 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using UnityEngine;
-using System.Collections;
-using ZMQ;
+﻿using System.Collections;
+using System.Collections.Generic;
+using NetMQ;
+using TestCode;
 using System.Text;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
+using System;
 
-[Serializable]
-public class ZSocketManager
-{
-    private Context ctx;
-    private Socket socket;
-
-    public ZSocketManager(String address)
+public class ZSocketManager{
+    private NetMQ.Sockets.RequestSocket client;
+    private string connectionString;
+    BinaryFormatter bf;
+	
+    public ZSocketManager(string connString)
     {
-        ctx = new Context();
-        socket = ctx.Socket(SocketType.REQ);
-        socket.Bind(address);
+        bf = new BinaryFormatter();
+        connectionString = connString;
+        client = new NetMQ.Sockets.RequestSocket();
+        client.Connect(connectionString);
     }
 
-    public void SendRequest(string request, out string response)
+    public void SendReq(GameState gameState, out string recievedMessage)
     {
-        socket.Send(request, Encoding.UTF8);
-        byte[] reply = socket.Recv();
-        response = reply.ToString();
+        byte[] bytes = new byte[gameState.CalculateSize()];
+        Google.Protobuf.CodedOutputStream codedOutputStream = new Google.Protobuf.CodedOutputStream(bytes);
+        gameState.WriteTo(codedOutputStream);
+        codedOutputStream.Flush();
+
+        client.SendFrame(bytes, false);
+        //recievedMessage = client.ReceiveFrameString();
+        if(!client.TryReceiveFrameString(new TimeSpan(0, 0, 1), out recievedMessage))
+        {
+            recievedMessage = "";
+            UnityEditor.EditorApplication.isPlaying = false;
+        }
     }
 
-    ~ZSocketManager()
+    public void Dispose()
     {
-        socket.Dispose();
-        ctx.Dispose();
+        client.Disconnect(connectionString);
+        client.Dispose();
+        NetMQ.NetMQConfig.Cleanup();
     }
 }
